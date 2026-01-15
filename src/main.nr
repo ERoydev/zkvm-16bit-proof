@@ -2,9 +2,9 @@ use sha256::sha256_var;
 
 fn main(
     // Public Inputs
-    // program_hash: Field,
-    // input_hash: Field,
-    // output_hash: Field,
+    program_hash: [Field; 32],
+    input_hash: [Field; 32],
+    output_hash: [Field; 32],
     // Private Witness
     program: [Field; 6],
     // Registers trace on each step
@@ -90,7 +90,22 @@ fn main(
 
 #[test]
 fn test_main() {
-    // Bellow are the actual values that my VM logged into .log file after execution
+    // ===== Public inputs =====
+    let program_hash = [
+        22, 27, 244, 198, 115, 27, 228, 193, 233, 230, 11, 101, 182, 250, 242, 189, 111, 97, 90, 40,
+        128, 229, 102, 3, 191, 43, 67, 237, 233, 208, 103, 48,
+    ];
+    let input_hash = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0,
+    ];
+    let output_hash = [
+        241, 134, 137, 34, 86, 58, 15, 173, 38, 102, 227, 247, 119, 101, 231, 51, 79, 46, 107, 45,
+        133, 114, 254, 68, 224, 73, 78, 129, 255, 24, 6, 229,
+    ];
+
+    // ===== Private witness =====
+    // Bellow are the actual values that my 16-bit VM logged into .log after program execution
     let program = [22021, 4192, 22019, 4448, 16400, 24576];
     let opcode = [5, 1, 5, 1, 4, 6, 0];
     let registers = [
@@ -104,8 +119,18 @@ fn test_main() {
     ];
     let reg_pairs = [[6, 0, 5], [0, 6, 0], [6, 0, 3], [1, 6, 0], [0, 1, 0], [0, 0, 0], [0, 0, 0]];
     let pc = [258, 260, 262, 264, 266, 268, 270];
-    // have in mind for 16-bit system i need two bytes to get one memory address, one slot (memory_subset[0] + [1])
+    // have in mind that for 16-bit system i need to take 2 bytes in order to get one memory address, one slot (memory_subset[0] + [1])
     let memory_subset = [8, 0, 96, 16, 3, 86, 96, 17, 16, 64, 0, 96, 0, 0];
 
-    main(program, registers, pc, opcode, reg_pairs, memory_subset);
+    main(
+        program_hash,
+        input_hash,
+        output_hash,
+        program,
+        registers,
+        pc,
+        opcode,
+        reg_pairs,
+        memory_subset,
+    );
 }
