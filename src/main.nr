@@ -21,9 +21,6 @@ fn main(
     // Enforce program hash matches our program
     // constrain hash_program(program) == program_hash;
 
-    // Simple VM loop two steps
-    // registers[0] - registers[1] - registers[2]
-    // pc[0], pc[1], pc[2]
     for i in 0..6 {
         let op: Field = opcode[i];
         let before: [Field; 7] = registers[i];
@@ -84,7 +81,7 @@ fn main(
         assert(pc[i + 1] == pc[i] + 2);
     }
 
-    // // Final state commitment
+    // Final state commitment
     // constrain hash_registers(registers[2]) == output_hash;
 }
 
