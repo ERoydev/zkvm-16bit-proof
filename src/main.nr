@@ -14,26 +14,27 @@ fn hash_field(one_field: Field) -> Field {
 fn main(
     // Public Inputs
     program_hash: Field, // bn254 hash of the sha254 field
-    input_hash: Field,
     output_hash: Field,
     pub_program_state: [Field; 7], // sha254 of the program state at each step
     // Private Witness
     raw_program: Field, // sha256 hash of the program, converted to bn254 field
     private_program_state: [Field; 7], // sha254 of the program state at each step
+    private_output_state: Field, // sha254 of the final program state
 ) {
     // Enforce program hash matches our program
     let calculated_program_hash = hash_field(raw_program);
     assert(calculated_program_hash == program_hash);
 
     for curr_state in 0..7 {
-        let pub_state= pub_program_state[curr_state];
+        let pub_state = pub_program_state[curr_state];
         let pos_hash_private_state = hash_field(private_program_state[curr_state]);
         // Should validate that the state of (pc, registers, opcode, memory_subset) at each step matches
         assert(pub_state == pos_hash_private_state);
     }
 
     // Final state commitment
-    // constrain hash_registers(registers[2]) == output_hash;
+    let calculated_output_hash = hash_field(private_output_state);
+    assert(calculated_output_hash == output_hash);
 }
 
 #[test]
@@ -41,8 +42,7 @@ fn test_circuit() {
     // ===== Public inputs =====
     let program_hash =
         10299258156576067376321481439471656619278056506920354124431265275224066876462;
-    let input_hash = 0;
-    let output_hash = 10746340777721269091166620128903435181954602251522780056306054141228417734284;
+    let output_hash = 12403710014822892620040271914164698919015869120790648051970779227375399640613;
     // Each hash is a combination of program state on each step (registers, pc, opcode, memory_subset)
     let pub_program_state = [
         17334395722299672441718429218237777491516500674801380497891547466848781466880,
@@ -65,13 +65,15 @@ fn test_circuit() {
         13190984325669599884849940170655771152671914940933553896042924898286341111811,
         6074351881830694168047282561982111350499331315385337108301912210788932301654,
     ];
+    let private_output_state =
+        8200953031481974930366339812552860190967038678546187478649906208479047754934;
 
     main(
         program_hash,
-        input_hash,
         output_hash,
         pub_program_state,
         raw_program,
         private_program_state,
+        private_output_state,
     );
 }
