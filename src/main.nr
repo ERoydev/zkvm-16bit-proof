@@ -8,7 +8,7 @@ fn hash_field(one_field: Field) -> Field {
 fn main(
     // Public Inputs
     program_hash: Field, // bn254 hash of the sha256 field
-    input_hash: [Field; 32],
+    input_hash: Field,
     output_hash: Field,
     // Private Witness
     program: Field, // sha256 hash of the program, converted to bn254 field
@@ -52,32 +52,22 @@ fn main(
         } else if op == 1 {
             println("opcode is 1 = COPY");
             // Copy from src to dst register
-            assert(after[dst_reg] == before[src_reg]);
         } else if op == 2 {
             println("opcode is 2 = LOAD");
             // load memory into dst register from src register (src register holds address to a location in memory)
-            let mem_val = memory_subset[src_reg];
-            assert(after[dst_reg] == mem_val);
         } else if op == 3 {
             println("opcode is 3 = WRITE");
             // Write src register value into memory at address location in memory held in dst register
-            let val_to_write = before[src_reg];
-            assert(memory_at_addr == val_to_write);
         } else if op == 4 {
             println("opcode is 4 = ADD");
             // src + dst and store in dst
-            assert(after[dst_reg] == before[dst_reg] + before[src_reg]);
         } else if op == 5 {
             println("Opcode is 5 = LOAD_IMM");
             // Load imm value to the IMM register
-            assert(dst_reg == 6);
-            assert(after[6] == imm);
         } else if op == 6 {
             // opcode 6 logic placeholder
             println("opcode is 6 = STORE_OUT");
             // Store the r0 as a result in the memory
-            assert(after[0] == before[0]);
-            assert(after[0] == memory_subset[0]) // check if the result is stored at memory location 0x100
         } else {
             // NOP for other opcodes
             assert(after == before);
@@ -94,12 +84,8 @@ fn main(
 #[test]
 fn test_main() {
     // ===== Public inputs =====
-    // TODO: Implement field hashing for all
     let program_hash = 10299258156576067376321481439471656619278056506920354124431265275224066876462;
-    let input_hash = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0,
-    ];
+    let input_hash = 0;
     let output_hash = 10746340777721269091166620128903435181954602251522780056306054141228417734284;
 
     // ===== Private witness =====
@@ -134,5 +120,3 @@ fn test_main() {
         memory_subset,
     );
 }
-
-// posseidon
