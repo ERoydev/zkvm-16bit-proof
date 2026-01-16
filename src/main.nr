@@ -1,12 +1,17 @@
-use sha256::sha256_var;
+use poseidon;
+
+fn hash_field(one_field: Field) -> Field {
+    // Typically this takes a bn254 compatible field of Sha256 and hashes it using Poseidon
+    poseidon::poseidon::bn254::hash_1([one_field])
+}
 
 fn main(
     // Public Inputs
-    program_hash: [Field; 32],
+    program_hash: Field, // bn254 hash of the sha256 field
     input_hash: [Field; 32],
-    output_hash: [Field; 32],
+    output_hash: Field,
     // Private Witness
-    program: [Field; 6],
+    program: Field, // sha256 hash of the program, converted to bn254 field
     // Registers trace on each step
     registers: [[Field; 7]; 7], // provide before and after execution
     // Pc trace on each step
@@ -19,7 +24,8 @@ fn main(
     memory_subset: [Field; 14],
 ) {
     // Enforce program hash matches our program
-    // constrain hash_program(program) == program_hash;
+    let calculated_program_hash = hash_field(program);
+    assert(calculated_program_hash == program_hash);
 
     for i in 0..6 {
         let op: Field = opcode[i];
@@ -88,22 +94,19 @@ fn main(
 #[test]
 fn test_main() {
     // ===== Public inputs =====
-    let program_hash = [
-        22, 27, 244, 198, 115, 27, 228, 193, 233, 230, 11, 101, 182, 250, 242, 189, 111, 97, 90, 40,
-        128, 229, 102, 3, 191, 43, 67, 237, 233, 208, 103, 48,
-    ];
+    // TODO: Implement field hashing for all
+    let program_hash = 10299258156576067376321481439471656619278056506920354124431265275224066876462;
     let input_hash = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,
     ];
-    let output_hash = [
-        241, 134, 137, 34, 86, 58, 15, 173, 38, 102, 227, 247, 119, 101, 231, 51, 79, 46, 107, 45,
-        133, 114, 254, 68, 224, 73, 78, 129, 255, 24, 6, 229,
-    ];
+    let output_hash = 10746340777721269091166620128903435181954602251522780056306054141228417734284;
 
     // ===== Private witness =====
     // Bellow are the actual values that my 16-bit VM logged into .log after program execution
-    let program = [22021, 4192, 22019, 4448, 16400, 24576];
+    // This is the raw program hashed using sha256
+    let program = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
+    
     let opcode = [5, 1, 5, 1, 4, 6, 0];
     let registers = [
         [0, 0, 0, 0, 258, 22021, 0],
@@ -131,3 +134,5 @@ fn test_main() {
         memory_subset,
     );
 }
+
+// posseidon
