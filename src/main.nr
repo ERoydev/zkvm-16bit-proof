@@ -5,76 +5,31 @@ fn hash_field(one_field: Field) -> Field {
     poseidon::poseidon::bn254::hash_1([one_field])
 }
 
+// Each public input must be hashed with poseidon before being passed to the circuit
+// Each private witness must be hashed using sha254
+
+// sha254 represent raw data it is just compressed into a single field element
+// poseidon represent public data, hidden that need to be used for proof generation
+
 fn main(
     // Public Inputs
-    program_hash: Field, // bn254 hash of the sha256 field
+    program_hash: Field, // bn254 hash of the sha254 field
     input_hash: Field,
     output_hash: Field,
+    pub_program_state: [Field; 7], // sha254 of the program state at each step
     // Private Witness
-    program: Field, // sha256 hash of the program, converted to bn254 field
-    // Registers trace on each step
-    registers: [[Field; 7]; 7], // provide before and after execution
-    // Pc trace on each step
-    pc: [Field; 7],
-    // Opcode for each step
-    opcode: [Field; 7],
-    // reg pairs
-    reg_pairs: [[Field; 3]; 7],
-    // memory_subset
-    memory_subset: [Field; 14],
+    raw_program: Field, // sha256 hash of the program, converted to bn254 field
+    private_program_state: [Field; 7], // sha254 of the program state at each step
 ) {
     // Enforce program hash matches our program
-    let calculated_program_hash = hash_field(program);
+    let calculated_program_hash = hash_field(raw_program);
     assert(calculated_program_hash == program_hash);
 
-    for i in 0..6 {
-        let op: Field = opcode[i];
-        let before: [Field; 7] = registers[i];
-        let after: [Field; 7] = registers[i + 1];
-        // dst, src, imm for each step
-        let dst_reg = reg_pairs[i][0];
-        let src_reg = reg_pairs[i][1];
-        let imm = reg_pairs[i][2];
-
-        let low_byte = memory_subset[i * 2];
-        let high_byte = memory_subset[i * 2 + 1];
-        let memory_at_addr: Field = high_byte * 256 + low_byte;
-
-        // Handle each opcode
-        if op == 0 {
-            println("opcode is 0 = HALT");
-            // after register R0 == before R1 + 1 (example)
-            assert(after[0] == before[1] + 1);
-            // other registers unchanged
-            for j in 1..7 {
-                assert(after[j] == before[j]);
-            }
-        } else if op == 1 {
-            println("opcode is 1 = COPY");
-            // Copy from src to dst register
-        } else if op == 2 {
-            println("opcode is 2 = LOAD");
-            // load memory into dst register from src register (src register holds address to a location in memory)
-        } else if op == 3 {
-            println("opcode is 3 = WRITE");
-            // Write src register value into memory at address location in memory held in dst register
-        } else if op == 4 {
-            println("opcode is 4 = ADD");
-            // src + dst and store in dst
-        } else if op == 5 {
-            println("Opcode is 5 = LOAD_IMM");
-            // Load imm value to the IMM register
-        } else if op == 6 {
-            // opcode 6 logic placeholder
-            println("opcode is 6 = STORE_OUT");
-            // Store the r0 as a result in the memory
-        } else {
-            // NOP for other opcodes
-            assert(after == before);
-        }
-
-        // PC moves forward by 2 bytes each instruction, so for each iteration i have one step forward
-        assert(pc[i + 1] == pc[i] + 2);
+    for curr_state in 0..7 {
+        let pub_state= pub_program_state[curr_state];
+        let pos_hash_private_state = hash_field(private_program_state[curr_state]);
+        // Should validate that the state of (pc, registers, opcode, memory_subset) at each step matches
+        assert(pub_state == pos_hash_private_state);
     }
 
     // Final state commitment
@@ -82,41 +37,41 @@ fn main(
 }
 
 #[test]
-fn test_main() {
+fn test_circuit() {
     // ===== Public inputs =====
-    let program_hash = 10299258156576067376321481439471656619278056506920354124431265275224066876462;
+    let program_hash =
+        10299258156576067376321481439471656619278056506920354124431265275224066876462;
     let input_hash = 0;
     let output_hash = 10746340777721269091166620128903435181954602251522780056306054141228417734284;
+    // Each hash is a combination of program state on each step (registers, pc, opcode, memory_subset)
+    let pub_program_state = [
+        17334395722299672441718429218237777491516500674801380497891547466848781466880,
+        16665548319750628604219208683108605982529051533049782524124833339024484818570,
+        19181372984671214253406088454799230807685453844665209980902419453551724694401,
+        8409197684857838227183114338823273774417981650111201492890956757892432304134,
+        8517350381380768011872193244691483077580564583972207126060806388957788747562,
+        11414260848879985282266523951173779991216026823492290401607367610693283650825,
+        12360729685463105665094322618100102879896613675529548458250874453564220012259,
+    ];
 
     // ===== Private witness =====
-    // Bellow are the actual values that my 16-bit VM logged into .log after program execution
-    // This is the raw program hashed using sha256
-    let program = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
-    
-    let opcode = [5, 1, 5, 1, 4, 6, 0];
-    let registers = [
-        [0, 0, 0, 0, 258, 22021, 0],
-        [0, 0, 0, 0, 260, 4192, 5],
-        [5, 0, 0, 0, 262, 22019, 5],
-        [5, 0, 0, 0, 264, 4448, 3],
-        [5, 3, 0, 0, 266, 16400, 3],
-        [8, 3, 0, 0, 268, 24576, 3],
-        [8, 3, 0, 0, 270, 0, 3],
+    let raw_program = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
+    let private_program_state = [
+        13104312851388067398452158410980007409935191118611534470130694987694392523325,
+        9529981917706746317007056984476201760943194738692504998034558202249532772280,
+        18654981179325678686938355387745637207498473067782124298690948001758219246857,
+        18999759433657479019498956508185357286816584794271026992945844029707119334764,
+        18589868827301183725254113024020713226611245982132117950491286358527976672999,
+        13190984325669599884849940170655771152671914940933553896042924898286341111811,
+        6074351881830694168047282561982111350499331315385337108301912210788932301654,
     ];
-    let reg_pairs = [[6, 0, 5], [0, 6, 0], [6, 0, 3], [1, 6, 0], [0, 1, 0], [0, 0, 0], [0, 0, 0]];
-    let pc = [258, 260, 262, 264, 266, 268, 270];
-    // have in mind that for 16-bit system i need to take 2 bytes in order to get one memory address, one slot (memory_subset[0] + [1])
-    let memory_subset = [8, 0, 96, 16, 3, 86, 96, 17, 16, 64, 0, 96, 0, 0];
 
     main(
         program_hash,
         input_hash,
         output_hash,
-        program,
-        registers,
-        pc,
-        opcode,
-        reg_pairs,
-        memory_subset,
+        pub_program_state,
+        raw_program,
+        private_program_state,
     );
 }
