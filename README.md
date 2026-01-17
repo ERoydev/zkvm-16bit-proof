@@ -39,20 +39,31 @@ nargo execute
 ```
 
 ## Inputs
-- **Public Inputs:**
-  - `program_hash`: [Field; 32]
-  - `input_hash`: [Field; 32]
-  - `output_hash`: [Field; 32]
-- **Private Witness:**
-  - `program`: [Field; 6]
-  - `registers`: [[Field; 7]; 7]
-  - `pc`: [Field; 7]
-  - `opcode`: [Field; 7]
-  - `reg_pairs`: [[Field; 3]; 7]
-  - `memory_subset`: [Field; 14]
 
-## Example
-See the `test_main` function in `src/main.nr` for a sample test vector and usage.
+- **Public Inputs:**
+  - `program_hash`: Field — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
+  - `output_hash`: Field — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
+  - `pub_program_state`: [Field; 7] — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
+
+- **Private Witness:**
+  - `private_program_sha254`: Field — SHA-256 hash of the program, converted to bn254 field
+  - `private_output_sha254`: Field — SHA-256 hash of the final program state, as bn254 field
+  - `private_program_state`: [Field; 7] — SHA-256 hash of the program state at each step, as bn254 fields
+
+
+Each hash is computed using SHA-256 and then converted to a bn254 field element for compatibility with the circuit. Arrays represent traces or states at each step of execution.
+
+- Public inputs are provided as hashes (using Poseidon) for succinctness and privacy.
+- Private witness values are the original data, which are hashed with SHA-256 for compression and integrity within the circuit.
+
+## Supported Verifier Backends
+
+This circuit has been tested with multiple verifier backends to ensure compatibility and correctness:
+
+- **Barretenberg**: Successfully tested for proof generation and verification. (Noir v = 1.0.0-beta.3)
+- **Sunspot**: Successfully tested for proof compilation and verification. (Noir v = 1.0.0-beta.13)
+
+These tests confirm that the circuit's ACIR output and proof system are compatible with both Barretenberg and Sunspot.
 
 ## License
 MIT
