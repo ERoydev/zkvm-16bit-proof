@@ -17,12 +17,12 @@ fn main(
     output_hash: Field,
     pub_program_state: [Field; 7], // sha254 of the program state at each step
     // Private Witness
-    raw_program: Field, // sha256 hash of the program, converted to bn254 field
+    private_program_sha254: Field, // sha256 hash of the program, converted to bn254 field
+    private_output_sha254: Field, // sha254 of the final program state
     private_program_state: [Field; 7], // sha254 of the program state at each step
-    private_output_state: Field, // sha254 of the final program state
 ) {
     // Enforce program hash matches our program
-    let calculated_program_hash = hash_field(raw_program);
+    let calculated_program_hash = hash_field(private_program_sha254);
     assert(calculated_program_hash == program_hash);
 
     for curr_state in 0..7 {
@@ -33,7 +33,7 @@ fn main(
     }
 
     // Final state commitment
-    let calculated_output_hash = hash_field(private_output_state);
+    let calculated_output_hash = hash_field(private_output_sha254);
     assert(calculated_output_hash == output_hash);
 }
 
@@ -55,7 +55,7 @@ fn test_circuit() {
     ];
 
     // ===== Private witness =====
-    let raw_program = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
+    let private_program_sh254 = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
     let private_program_state = [
         13104312851388067398452158410980007409935191118611534470130694987694392523325,
         9529981917706746317007056984476201760943194738692504998034558202249532772280,
@@ -65,15 +65,15 @@ fn test_circuit() {
         13190984325669599884849940170655771152671914940933553896042924898286341111811,
         6074351881830694168047282561982111350499331315385337108301912210788932301654,
     ];
-    let private_output_state =
+    let private_output_sha254 =
         8200953031481974930366339812552860190967038678546187478649906208479047754934;
 
     main(
         program_hash,
         output_hash,
         pub_program_state,
-        raw_program,
+        private_program_sh254,
+        private_output_sha254,
         private_program_state,
-        private_output_state,
     );
 }
