@@ -1,25 +1,19 @@
 use poseidon;
 
+/// Takes sha256 hash converted to bn254 field
 fn hash_field(one_field: Field) -> Field {
-    // Typically this takes a bn254 compatible field of Sha256 and hashes it using Poseidon
     poseidon::poseidon::bn254::hash_1([one_field])
 }
 
-// Each public input must be hashed with poseidon before being passed to the circuit
-// Each private witness must be hashed using sha254
-
-// sha254 represent raw data it is just compressed into a single field element
-// poseidon represent public data, hidden that need to be used for proof generation
-
 fn main(
     // Public Inputs
-    program_hash: Field, // bn254 hash of the sha254 field
+    program_hash: Field,
     output_hash: Field,
-    pub_program_state: [Field; 7], // sha254 of the program state at each step
+    pub_program_state: [Field; 7],
     // Private Witness
-    private_program_sha254: Field, // sha256 hash of the program, converted to bn254 field
-    private_output_sha254: Field, // sha254 of the final program state
-    private_program_state: [Field; 7], // sha254 of the program state at each step
+    private_program_sha254: Field,
+    private_output_sha254: Field,
+    private_program_state: [Field; 7], 
 ) {
     // Enforce program hash matches our program
     let calculated_program_hash = hash_field(private_program_sha254);
@@ -28,7 +22,7 @@ fn main(
     for curr_state in 0..7 {
         let pub_state = pub_program_state[curr_state];
         let pos_hash_private_state = hash_field(private_program_state[curr_state]);
-        // Should validate that the state of (pc, registers, opcode, memory_subset) at each step matches
+        // Validate public/private VM state (pc, registers, opcode, memory)
         assert(pub_state == pos_hash_private_state);
     }
 
