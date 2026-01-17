@@ -66,5 +66,10 @@ This circuit has been tested with multiple verifier backends to ensure compatibi
 
 These tests confirm that the circuit's ACIR output and proof system are compatible with both Barretenberg and Sunspot.
 
+## Deployed Verifiable programs
+
+[Solana](https://explorer.solana.com/address/Bz7QXXTtBKQ6nMMm1yTT5hkbnc9ork7SMBMe9f1GbxCj?cluster=devnet)
+
+
 ## License
 MIT
