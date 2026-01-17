@@ -1,5 +1,7 @@
 use poseidon;
 
+global STATE_CAPACITY: u32 = 20;
+
 /// Takes sha256 hash converted to bn254 field
 fn hash_field(one_field: Field) -> Field {
     poseidon::poseidon::bn254::hash_1([one_field])
@@ -9,21 +11,23 @@ fn main(
     // Public Inputs
     program_hash: Field,
     output_hash: Field,
-    pub_program_state: [Field; 7],
+    pub_program_state: [Field; STATE_CAPACITY],
+    actual_state_len: u32,
     // Private Witness
     private_program_sha254: Field,
     private_output_sha254: Field,
-    private_program_state: [Field; 7], 
+    private_program_state: [Field; STATE_CAPACITY],
 ) {
     // Enforce program hash matches our program
     let calculated_program_hash = hash_field(private_program_sha254);
     assert(calculated_program_hash == program_hash);
 
-    for curr_state in 0..7 {
-        let pub_state = pub_program_state[curr_state];
-        let pos_hash_private_state = hash_field(private_program_state[curr_state]);
-        // Validate public/private VM state (pc, registers, opcode, memory)
-        assert(pub_state == pos_hash_private_state);
+    for curr_state in 0..STATE_CAPACITY {
+        if curr_state < actual_state_len {
+            let pub_state = pub_program_state[curr_state];
+            let pos_hash_private_state = hash_field(private_program_state[curr_state]);
+            assert(pub_state == pos_hash_private_state);
+        }
     }
 
     // Final state commitment
@@ -46,6 +50,19 @@ fn test_circuit() {
         8517350381380768011872193244691483077580564583972207126060806388957788747562,
         11414260848879985282266523951173779991216026823492290401607367610693283650825,
         12360729685463105665094322618100102879896613675529548458250874453564220012259,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     ];
 
     // ===== Private witness =====
@@ -59,14 +76,31 @@ fn test_circuit() {
         18589868827301183725254113024020713226611245982132117950491286358527976672999,
         13190984325669599884849940170655771152671914940933553896042924898286341111811,
         6074351881830694168047282561982111350499331315385337108301912210788932301654,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     ];
+
     let private_output_sha254 =
         8200953031481974930366339812552860190967038678546187478649906208479047754934;
+
+    let actual_state_len: u32 = 7;
 
     main(
         program_hash,
         output_hash,
         pub_program_state,
+        actual_state_len,
         private_program_sh254,
         private_output_sha254,
         private_program_state,

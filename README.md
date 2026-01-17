@@ -44,6 +44,7 @@ nargo execute
   - `program_hash`: Field — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
   - `output_hash`: Field — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
   - `pub_program_state`: [Field; 7] — Poseidon hash of the SHA-256 digest, reduced modulo the bn254 field prime (as with sha254)
+  - `actual_state_len`: u32 - the actual number of valid VM state steps (excluding any trailing dummy entries)
 
 - **Private Witness:**
   - `private_program_sha254`: Field — SHA-256 hash of the program, converted to bn254 field
