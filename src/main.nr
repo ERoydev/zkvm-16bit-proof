@@ -36,7 +36,7 @@ fn main(
 }
 
 #[test]
-fn test_circuit() {
+fn test_circuit_expected_behavior() {
     // ===== Public inputs =====
     let program_hash =
         10299258156576067376321481439471656619278056506920354124431265275224066876462;
@@ -96,6 +96,124 @@ fn test_circuit() {
 
     let actual_state_len: u32 = 7;
 
+    main(
+        program_hash,
+        output_hash,
+        pub_program_state,
+        actual_state_len,
+        private_program_sh254,
+        private_output_sha254,
+        private_program_state,
+    );
+}
+
+#[test]
+fn test_minimal_state() {
+    let program_hash = 10299258156576067376321481439471656619278056506920354124431265275224066876462;
+    let output_hash = 12403710014822892620040271914164698919015869120790648051970779227375399640613;
+    let pub_program_state: [Field; STATE_CAPACITY] = [
+        17334395722299672441718429218237777491516500674801380497891547466848781466880,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ];
+    let actual_state_len: u32 = 1;
+    let private_program_sh254 = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
+    let private_output_sha254 = 8200953031481974930366339812552860190967038678546187478649906208479047754934;
+    let private_program_state: [Field; STATE_CAPACITY] = [
+        13104312851388067398452158410980007409935191118611534470130694987694392523325,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ];
+
+    main(
+        program_hash,
+        output_hash,
+        pub_program_state,
+        actual_state_len,
+        private_program_sh254,
+        private_output_sha254,
+        private_program_state,
+    );
+}
+
+#[test]
+fn test_maximal_state() {
+    let program_hash = 10299258156576067376321481439471656619278056506920354124431265275224066876462;
+    let output_hash = 12403710014822892620040271914164698919015869120790648051970779227375399640613;
+
+    let temp_program_state = 17334395722299672441718429218237777491516500674801380497891547466848781466880;
+    let mut pub_program_state: [Field; STATE_CAPACITY] = [0; STATE_CAPACITY];
+
+    for i in 0..STATE_CAPACITY {
+        pub_program_state[i] = temp_program_state;
+    }
+   
+    let actual_state_len: u32 = 1;
+    let private_program_sh254 = 12630064940486355474560008940412951592852515982109303420759129898107056307488;
+    let private_output_sha254 = 8200953031481974930366339812552860190967038678546187478649906208479047754934;
+    
+    let temp_private_program_state = 13104312851388067398452158410980007409935191118611534470130694987694392523325;
+    let mut private_program_state: [Field; STATE_CAPACITY] = [0; STATE_CAPACITY];
+
+    for i in 0..STATE_CAPACITY {
+        private_program_state[i] = temp_private_program_state;
+    }
+
+    main(
+        program_hash,
+        output_hash,
+        pub_program_state,
+        actual_state_len,
+        private_program_sh254,
+        private_output_sha254,
+        private_program_state,
+    );
+}
+
+
+#[test(should_fail)]
+fn test_mismatched_state_should_fail() {
+    let program_hash = 1000;
+    let output_hash = 2000;
+    let pub_program_state: [Field; STATE_CAPACITY] = [1,2,999,4,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    let actual_state_len: u32 = 5;
+    let private_program_sh254 = 3000;
+    let private_output_sha254 = 4000;
+    let private_program_state: [Field; STATE_CAPACITY] = [6,7,888,9,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     main(
         program_hash,
         output_hash,
